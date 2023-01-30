@@ -9,5 +9,4 @@ func SessionRoute(rg *gin.RouterGroup) {
 	router := rg.Group("/sessions/oauth")
 
 	router.GET("/google", controllers.GoogleOAuth)
-	router.GET("/github", controllers.GitHubOAuth)
 }
