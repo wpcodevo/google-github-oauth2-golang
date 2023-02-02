@@ -18,17 +18,6 @@ type GoogleOauthToken struct {
 	Id_token     string
 }
 
-type GoogleUserResult struct {
-	Id             string
-	Email          string
-	Verified_email bool
-	Name           string
-	Given_name     string
-	Family_name    string
-	Picture        string
-	Locale         string
-}
-
 func GetGoogleOauthToken(code string) (*GoogleOauthToken, error) {
 	const rootURl = "https://oauth2.googleapis.com/token"
 
@@ -79,6 +68,17 @@ func GetGoogleOauthToken(code string) (*GoogleOauthToken, error) {
 	}
 
 	return tokenBody, nil
+}
+
+type GoogleUserResult struct {
+	Id             string
+	Email          string
+	Verified_email bool
+	Name           string
+	Given_name     string
+	Family_name    string
+	Picture        string
+	Locale         string
 }
 
 func GetGoogleUser(access_token string, id_token string) (*GoogleUserResult, error) {
