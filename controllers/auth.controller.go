@@ -79,68 +79,6 @@ func LogoutUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
-func GoogleOAuth(ctx *gin.Context) {
-	code := ctx.Query("code")
-	var pathUrl string = "/"
-
-	if ctx.Query("state") != "" {
-		pathUrl = ctx.Query("state")
-	}
-
-	if code == "" {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "Authorization code not provided!"})
-		return
-	}
-
-	tokenRes, err := utils.GetGoogleOauthToken(code)
-
-	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"status": "fail", "message": err.Error()})
-		return
-	}
-
-	google_user, err := utils.GetGoogleUser(tokenRes.Access_token, tokenRes.Id_token)
-
-	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"status": "fail", "message": err.Error()})
-		return
-	}
-
-	now := time.Now()
-	email := strings.ToLower(google_user.Email)
-
-	user_data := models.User{
-		Name:      google_user.Name,
-		Email:     email,
-		Password:  "",
-		Photo:     google_user.Picture,
-		Provider:  "Google",
-		Role:      "user",
-		Verified:  true,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
-
-	if initializers.DB.Model(&user_data).Where("email = ?", email).Updates(&user_data).RowsAffected == 0 {
-		initializers.DB.Create(&user_data)
-	}
-
-	var user models.User
-	initializers.DB.First(&user, "email = ?", email)
-
-	config, _ := initializers.LoadConfig(".")
-
-	token, err := utils.GenerateToken(config.TokenExpiresIn, user.ID.String(), config.JWTTokenSecret)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
-		return
-	}
-
-	ctx.SetCookie("token", token, config.TokenMaxAge*60, "/", "localhost", false, true)
-
-	ctx.Redirect(http.StatusTemporaryRedirect, fmt.Sprint(config.FrontEndOrigin, pathUrl))
-}
-
 func GitHubOAuth(ctx *gin.Context) {
 	code := ctx.Query("code")
 	var pathUrl string = "/"

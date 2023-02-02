@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -54,12 +54,13 @@ func GetGitHubOauthToken(code string) (*GitHubOauthToken, error) {
 		return nil, errors.New("could not retrieve token")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	var resBody bytes.Buffer
+	_, err = io.Copy(&resBody, res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	parsedQuery, err := url.ParseQuery(string(resBody))
+	parsedQuery, err := url.ParseQuery(resBody.String())
 	if err != nil {
 		return nil, err
 	}
@@ -94,14 +95,15 @@ func GetGitHubUser(access_token string) (*GitHubUserResult, error) {
 		return nil, errors.New("could not retrieve user")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	var resBody bytes.Buffer
+	_, err = io.Copy(&resBody, res.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	var GitHubUserRes map[string]interface{}
 
-	if err := json.Unmarshal(resBody, &GitHubUserRes); err != nil {
+	if err := json.Unmarshal(resBody.Bytes(), &GitHubUserRes); err != nil {
 		return nil, err
 	}
 
