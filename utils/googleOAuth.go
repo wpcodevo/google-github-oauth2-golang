@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -61,14 +61,15 @@ func GetGoogleOauthToken(code string) (*GoogleOauthToken, error) {
 		return nil, errors.New("could not retrieve token")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	var resBody bytes.Buffer
+	_, err = io.Copy(&resBody, res.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	var GoogleOauthTokenRes map[string]interface{}
 
-	if err := json.Unmarshal(resBody, &GoogleOauthTokenRes); err != nil {
+	if err := json.Unmarshal(resBody.Bytes(), &GoogleOauthTokenRes); err != nil {
 		return nil, err
 	}
 
@@ -103,14 +104,15 @@ func GetGoogleUser(access_token string, id_token string) (*GoogleUserResult, err
 		return nil, errors.New("could not retrieve user")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	var resBody bytes.Buffer
+	_, err = io.Copy(&resBody, res.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	var GoogleUserRes map[string]interface{}
 
-	if err := json.Unmarshal(resBody, &GoogleUserRes); err != nil {
+	if err := json.Unmarshal(resBody.Bytes(), &GoogleUserRes); err != nil {
 		return nil, err
 	}
 
