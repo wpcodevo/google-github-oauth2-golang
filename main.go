@@ -6,18 +6,15 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/wpcodevo/google-github-oath2-golang/controllers"
 	"github.com/wpcodevo/google-github-oath2-golang/initializers"
-	"github.com/wpcodevo/google-github-oath2-golang/routes"
+	"github.com/wpcodevo/google-github-oath2-golang/middleware"
 )
 
 var server *gin.Engine
 
 func init() {
 	initializers.ConnectDB()
-	// config, err := initializers.LoadConfig(".")
-	// if err != nil {
-	// 	panic(err)
-	// }
 
 	server = gin.Default()
 }
@@ -34,9 +31,13 @@ func main() {
 		ctx.JSON(http.StatusOK, gin.H{"status": "success", "message": "Implement Google OAuth2 in Golang"})
 	})
 
-	routes.AuthRoute(router)
-	routes.UserRoute(router)
-	routes.SessionRoute(router)
+	auth_router := router.Group("/auth")
+	auth_router.POST("/register", controllers.SignUpUser)
+	auth_router.POST("/login", controllers.SignInUser)
+	auth_router.GET("/logout", middleware.DeserializeUser(), controllers.LogoutUser)
+
+	router.GET("/sessions/oauth/google", controllers.GoogleOAuth)
+	router.GET("/users/me", middleware.DeserializeUser(), controllers.GetMe)
 
 	router.StaticFS("/images", http.Dir("public"))
 	server.NoRoute(func(ctx *gin.Context) {
